@@ -1,0 +1,3 @@
+[submodule "infra/.io"]
+	path = infra/.io
+	url = git@github.com:import-io/.io.git

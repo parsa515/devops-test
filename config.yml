@@ -1,0 +1,50 @@
+version: 2.1
+
+ssh_fingerprint: &ssh_fingerprint
+  fingerprints:
+    - "19:5c:fc:46:b0:c0:d0:2f:31:1c:15:a2:6d:64:b1:b9"
+    - "63:90:21:34:96:0b:3f:1e:9a:fb:04:32:5d:6e:f9:ad"
+
+checkout_submod: &checkout_submod
+  run:
+    name: Check out submodule
+    command: |
+      cd infra
+      git submodule update --init --recursive
+
+aws_tool_install: &aws_tool_install
+  run:
+    name: "Install AWS Tools"
+    command: |
+      sudo apt-get update && sudo apt-get install python-pip
+      pip install --upgrade pip virtualenv awscli awsebcli
+      echo 'export PATH=$PATH:~/.local/bin' >> $BASH_ENV
+
+jobs:
+  deploy:
+    # pre-built images: https://circleci.com/docs/2.0/circleci-images/
+    docker:
+      - image: circleci/node:10-browsers
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "19:5c:fc:46:b0:c0:d0:2f:31:1c:15:a2:6d:64:b1:b9"
+            - "63:90:21:34:96:0b:3f:1e:9a:fb:04:32:5d:6e:f9:ad"
+      - checkout
+      - <<: *aws_tool_install
+      - <<: *checkout_submod
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -l
+            bash subflow.sh
+      - run:
+          name: Running in a Unique Container
+          command: |
+            node -v
+workflows:
+  version: 2
+  deploy-test:
+    jobs:
+      - deploy
+
